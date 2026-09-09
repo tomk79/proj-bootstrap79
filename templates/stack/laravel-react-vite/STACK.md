@@ -1,6 +1,6 @@
 - 構成: Laravel（API・認証・バッチ）＋ Inertia + React + Vite（UI）。`compose.yml`（＋ `compose.dev.yml`）でローカルを1コマンドで起動できる状態を最初のコミットで作る。
 - `.env` はリポジトリ直下の1つに集約する。深い階層に複数置かない。
   - 由来: バラけていると機密の管理で事故が起きやすい。
-- 操作コマンドはすべてルートから打てるようにする（`composer`、`artisan`、`npm` のラッパーを `Makefile` か `package.json` に）。
+- `composer` / `artisan` / `npm` の入口を `package.json` に揃える（`"test": "php artisan test"` のようにラップする）。`npm test` 一発で PHP と TS の両方が走る状態にしておく（→ AGENTS.md「4. コマンド」）。
 - Lint / Format: `pint`（PHP）、`eslint` + `prettier`（TS）。テスト: `phpunit` / `pest`（PHP）、`vitest`（TS）。
 - ファイル名は半角英数にする。

@@ -16,6 +16,7 @@ npx github:tomk79/proj-bootstrap79
 | `.claude/settings.json` | 許可・不許可（`.env` 系の読み書き禁止など） |
 | `docs/GRILL.md` | **grill-me に必ず埋めさせる問いの空欄**。不可逆の決定はここに書く |
 | `.gitignore` | 最低限 |
+| `package.json`（**複数選んだときだけ**） | ルートから全アプリを回す集約。`npm test` で全種別のテスト、`npm run test:web` で1つだけ。下のアプリを直接叩かせないため |
 
 最後に「次にやること」を表示する。順番は **git init → `/grill-me` で `docs/GRILL.md` を埋める → 公式スキャフォルダ**。
 貼るだけで始められる `/grill-me` のプロンプト例と、選んだスタックのスキャフォルダのコマンド（`npm create tauri-app` など）も併せて出る。

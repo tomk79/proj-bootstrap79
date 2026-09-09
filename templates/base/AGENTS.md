@@ -46,11 +46,6 @@
 
 {{STACK_SECTION}}
 
-## 4. よく使うコマンド
+## 4. コマンド
 
-（公式スキャフォルダを走らせたあとに埋める）
-
-- 依存: `npm ci`
-- 開発:
-- テスト: `npm test` / `npm run lint` / `npm run typecheck`
-- ビルド:
+{{COMMANDS_SECTION}}

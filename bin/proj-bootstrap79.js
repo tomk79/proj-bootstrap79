@@ -120,6 +120,12 @@ const scaffoldCmd = (t) => {
   const cmd = STACKS[stacks.get(t)].scaffold;
   return multi ? `mkdir -p ${appDir(t)} && (cd ${appDir(t)} && ${cmd})` : cmd;
 };
+// ルートの npm から下のアプリを叩くための集約。dev は集約しない（開発サーバーを直列に繋いでも
+// 意味がない）ので、種別ごとの入口だけを用意する。
+const AGGREGATE = ['setup', 'test', 'lint', 'typecheck', 'build'];
+// ルートはスタックの事情を知らない。各アプリの `npm run <名前>`（setup だけ npm ci）を呼ぶだけにして、
+// 名前が無いアプリ側に足させる。ここに php artisan などを書き始めると、増やすほど誰も直せなくなる。
+const inApp = (t, name) => `cd ${appDir(t)} && ${name === 'setup' ? 'npm ci' : `npm run ${name}`}`;
 
 const vars = {
   APP_NAME: appName,
@@ -128,6 +134,7 @@ const vars = {
   CI: CI[ci].label,
   HOSTING: HOSTING[hosting].label,
   STACK_SECTION: stackSection(),
+  COMMANDS_SECTION: commandsSection(),
   SCAFFOLD: appTypes.map(scaffoldCmd).join('\n'),
   DATE: new Date().toISOString().slice(0, 10),
 };
@@ -141,6 +148,9 @@ for (const key of new Set(stacks.values())) {
   const stackFiles = join(TEMPLATES, 'stack', key, 'files');
   if (existsSync(stackFiles)) copyTree(stackFiles, target);
 }
+// 集約用の package.json は複数種別のときだけ。1種別のときはルート直下で公式スキャフォルダが
+// 自分の package.json を作るので、先に置くと create-next-app のように衝突で止まるものがある。
+if (multi) writeGenerated('package.json', rootPackageJson());
 
 stdout.write('\n置いたもの:\n');
 written.forEach((f) => stdout.write(`  + ${f}\n`));
@@ -157,7 +167,9 @@ const steps = [
   'git init && git add -A && git commit -m "置き手紙"',
   '/grill-me で docs/GRILL.md の空欄を埋める（プロンプトの例は下）',
   '埋まった方針に合わせて、公式スキャフォルダを走らせる（候補は下）',
-  'テストとビルドが空のまま緑になることを確かめてから、最初の機能に入る',
+  multi
+    ? 'ルートの `npm run setup && npm test` が全アプリを回して緑になることを確かめてから、最初の機能に入る'
+    : 'テストとビルドが空のまま緑になることを確かめてから、最初の機能に入る',
 ];
 stdout.write('\n次にやること:\n' + steps.map((s, i) => `  ${i + 1}. ${s}\n`).join(''));
 
@@ -195,6 +207,68 @@ function stackSection() {
 }
 function render(text) {
   return text.replace(/\{\{(\w+)\}\}/g, (_, k) => (k in vars ? vars[k] : `{{${k}}}`));
+}
+function rootPackageJson() {
+  const scripts = {};
+  for (const name of AGGREGATE) scripts[name] = appTypes.map((t) => `npm run ${name}:${t}`).join(' && ');
+  for (const t of appTypes) for (const name of ['dev', ...AGGREGATE]) scripts[`${name}:${t}`] = inApp(t, name);
+  const name = npmName(appName);
+  return `${JSON.stringify({ ...(name ? { name } : {}), private: true, scripts }, null, 2)}\n`;
+}
+// npm の名前としてそのまま使えるときだけ入れる。使えない文字を含むとき（日本語名など）は
+// 無理に変換せず name を書かない。private: true なら name 無しでも npm run / npm install は通る（npm 10.9 で実測）。
+function npmName(s) {
+  const n = s.toLowerCase();
+  return n.length <= 214 && /^[a-z0-9][a-z0-9._-]*$/.test(n) ? n : null;
+}
+// 「ルートから叩く」を生成物側のルールとして書く。1種別のときはルート＝アプリ本体なので、
+// 表は作らず、2つ目を足すときにどうするかだけ残す。
+function commandsSection() {
+  if (!multi) {
+    return [
+      'ルート＝アプリ本体なので、ルートで叩いたものがそのままアプリに効く（公式スキャフォルダを走らせたあとに埋める）。',
+      '',
+      '- 依存: `npm ci`',
+      '- 開発:',
+      '- テスト: `npm test` / `npm run lint` / `npm run typecheck`',
+      '- ビルド:',
+      '',
+      '- **2つ目のプラットフォームを足すときは、アプリを `apps/<種別>/` に移し、ルートの `package.json` を集約に変える**（`npm test` で全種別が走り、種別ごとは `npm run test:<種別>`）。下のアプリを直接叩く手順を残さない。',
+      '  - 由来: どのディレクトリで何を叩くかが人ごとの知識になると、片方のテストが走っていないことに気づけない。',
+      '',
+    ].join('\n');
+  }
+  const rows = appTypes.map(
+    (t) => `| \`npm run test:${t}\`（\`dev:\` \`lint:\` \`typecheck:\` \`build:\` \`setup:\` も同じ） | ${APP_TYPES[t].label}（\`${appDir(t)}/\`）だけ |`,
+  );
+  return [
+    '- **下のアプリを直接叩かない。ルートの `npm run <名前>` を唯一の入口にする。** 文書・CI・エージェントへの指示も、ルートのコマンドだけで書く。',
+    '  - 由来: プラットフォームが増えると「どのディレクトリで何を叩くか」が人ごとの知識になり、片方のテストが走っていないことに誰も気づけなくなる。',
+    '',
+    '| ルートで叩く | すること |',
+    '|---|---|',
+    '| `npm run setup` | 全アプリの依存を入れる |',
+    '| `npm test` | 全アプリのテスト（順に。1つ落ちたらそこで止まる） |',
+    '| `npm run lint` / `npm run typecheck` / `npm run build` | 同じく全アプリ |',
+    ...rows,
+    '',
+    `- \`dev\` だけ集約が無い。開発サーバーは ${appTypes.map((t) => `\`npm run dev:${t}\``).join(' / ')} で個別に上げる。`,
+    '- 集約は各アプリの `npm run <名前>`（`setup` だけ `npm ci`）を呼ぶだけ。**アプリ側にその名前が無ければ、アプリ側の `package.json` に足す**（npm 以外のもの — Laravel の `php artisan test` など — もそこで包む）。ルートの定義を削って回避しない。',
+    '  - 由来: 名前が揃っていないと、ルートがスタックごとの事情を抱え込むことになる。',
+    '- スキャフォルダ直後は `typecheck` などがアプリ側に無くて落ちる。落ちたらアプリ側に足して緑にする（→ 1. 品質ゲート）。',
+    '- アプリを足したら、ルートの `package.json` に `<名前>:<種別>` を足して集約にも繋ぎ、この表も直す。',
+    '',
+  ].join('\n');
+}
+// テンプレートに置かず bin が組み立てるファイル（内容が選んだ種別で変わるもの）。
+// 上書きしない・--force で上書きの約束は copyTree と揃える。
+function writeGenerated(rel, text) {
+  const d = join(target, rel);
+  if (existsSync(d) && statSync(d).isDirectory()) { blocked.push(rel); return; }
+  if (existsSync(d) && !force) { skipped.push(rel); return; }
+  mkdirSync(dirname(d), { recursive: true });
+  writeFileSync(d, text);
+  written.push(rel);
 }
 function copyTree(src, dst) {
   for (const name of readdirSync(src)) {
