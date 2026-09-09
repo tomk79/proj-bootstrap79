@@ -12,6 +12,9 @@ import { APP_TYPES, STACKS, CI, HOSTING } from '../lib/questions.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TEMPLATES = join(ROOT, 'templates');
 const force = argv.includes('--force');
+// npm pack は .gitignore をパッケージから落とす。npx github: 経由だと置かれないので、
+// テンプレート側はドット無しで持ち、コピーするときに戻す。
+const RENAME = { gitignore: '.gitignore' };
 const target = cwd();
 
 // --name= --type= --stack= --ci= --hosting= で答えを先渡しできる（AI や CI から呼ぶ用）。
@@ -131,6 +134,7 @@ const vars = {
 
 const written = [];
 const skipped = [];
+const blocked = [];
 
 copyTree(join(TEMPLATES, 'base'), target);
 for (const key of new Set(stacks.values())) {
@@ -143,6 +147,10 @@ written.forEach((f) => stdout.write(`  + ${f}\n`));
 if (skipped.length) {
   stdout.write('既にあるので触らなかったもの（--force で上書き）:\n');
   skipped.forEach((f) => stdout.write(`  = ${f}\n`));
+}
+if (blocked.length) {
+  stdout.write('置けなかったもの（同じ名前がファイル／ディレクトリの別種で埋まっている。どけるかは人間が決める）:\n');
+  blocked.forEach((f) => stdout.write(`  ! ${f}\n`));
 }
 // スキャフォルダを先に走らせない。何を作らないかが決まる前に雛形を置くと、それが仕様になる。
 const steps = [
@@ -191,13 +199,17 @@ function render(text) {
 function copyTree(src, dst) {
   for (const name of readdirSync(src)) {
     const s = join(src, name);
-    const d = join(dst, name);
-    if (statSync(s).isDirectory()) {
+    const d = join(dst, RENAME[name] ?? name);
+    const rel = relative(target, d);
+    const srcIsDir = statSync(s).isDirectory();
+    // 置き場が別の種類（ファイルの上にディレクトリ、またはその逆）で埋まっている。
+    // 消せば置けるが、それは不可逆なので --force でも触らず、人間に渡す。
+    if (existsSync(d) && statSync(d).isDirectory() !== srcIsDir) { blocked.push(rel); continue; }
+    if (srcIsDir) {
       mkdirSync(d, { recursive: true });
       copyTree(s, d);
       continue;
     }
-    const rel = relative(target, d);
     if (existsSync(d) && !force) { skipped.push(rel); continue; }
     mkdirSync(dirname(d), { recursive: true });
     writeFileSync(d, render(readFileSync(s, 'utf8')));
