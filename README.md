@@ -8,6 +8,7 @@ npx github:tomk79/proj-bootstrap79
 ```
 
 いくつかの質問（アプリの種類・スタック・CI・ホスティング）に答えると、次が置かれる。
+アプリの種類は**複数選べる**（デスクトップ＋対応するモバイル＋紹介用のウェブ、など）。複数選ぶとスタックは種類ごとに訊かれ、置き場は `apps/<種別>/` に分かれる。
 
 | 置くもの | 役割 |
 |---|---|
@@ -37,6 +38,12 @@ node ../../bin/proj-bootstrap79.js
 
 ```
 npx ../.. --name=sample-app --type=cli --stack=node-cli --ci=github --hosting=none
+```
+
+複数の種類を渡すときはカンマ区切り。`--stack=` も同じ数だけ並べる（どの種類のものかは `lib/questions.mjs` の `for` から引くので、順番は問わない）。
+
+```
+npx ../.. --name=sample-app --type=desktop,web --stack=tauri,next-vercel-supabase --ci=github --hosting=vercel
 ```
 
 `--type` `--stack` `--ci` `--hosting` の候補は `lib/questions.mjs` のキー。既にファイルがある状態での挙動（触らない／`--force` で上書き）も、同じディレクトリで二度叩けば確かめられる。
