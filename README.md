@@ -18,6 +18,35 @@ npx github:tomk79/proj-bootstrap79
 
 最後に「次に叩くコマンド」を表示する（`npm create tauri-app` など）。
 
+## ローカルで動作を試す
+
+`try/` は git から除外してある（`.gitignore`）。この中に捨てるつもりのディレクトリを掘って、**GitHub ではなくローカルの相対パス**を `npx` に渡す。パスは常にリポジトリのルート＝実行するディレクトリから見て `../..`。
+
+```
+mkdir -p try/sample && cd try/sample
+npx ../..
+```
+
+`bin/` `lib/` `templates/` への編集はそのまま次の実行に乗る（npx がその都度ローカルのパッケージを読む）。インストールの手間を惜しむなら直接叩いてもいい。
+
+```
+node ../../bin/proj-bootstrap79.js
+```
+
+質問を飛ばす（AI や CI から呼ぶときと同じ渡し方）:
+
+```
+npx ../.. --name=sample-app --type=cli --stack=node-cli --ci=github --hosting=none
+```
+
+`--type` `--stack` `--ci` `--hosting` の候補は `lib/questions.mjs` のキー。既にファイルがある状態での挙動（触らない／`--force` で上書き）も、同じディレクトリで二度叩けば確かめられる。
+
+試し終わったら捨てる。
+
+```
+cd ../.. && rm -rf try/sample
+```
+
 ## やらないこと
 
 - フレームワークの雛形は生成しない。公式のスキャフォルダに任せる（複製は腐るため）。
