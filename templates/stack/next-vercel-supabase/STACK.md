@@ -1,0 +1,5 @@
+- 最初に決めること: Next.js のバージョン／App Router か Pages Router か／Vercel の関数リージョン（日本向けは `hnd1`、既定は米国東部）／Supabase は Marketplace 経由か。
+- Vercel の課金は Active CPU 方式。I/O 待ちは課金されないので外部 API 連携に有利、CPU 集約処理に不利。Pro は超過してもサイトが止まらず請求で気づく構造なので、使用量アラートを最初に設定する。
+- Vercel は DB を持たない。データの置き場（Supabase のリージョン）は `docs/GRILL.md` で決める。
+- Lint / Format: `eslint`（next/core-web-vitals）+ `prettier`。テスト: `vitest` + Testing Library。E2E: Playwright。
+- Supabase の RLS（行レベルセキュリティ）は最初のテーブルから有効にする。あとから入れると全クエリを見直すことになる。

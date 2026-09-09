@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Edit(**/.env)",
+      "Edit(**/.env.*)",
+      "Read(**/*.pem)",
+      "Edit(**/*.pem)",
+      "Read(**/*.p8)",
+      "Edit(**/*.p8)",
+      "Read(**/*.p12)",
+      "Edit(**/*.p12)",
+      "Read(**/*.keystore)",
+      "Edit(**/*.keystore)",
+      "Read(**/*serviceAccount*)",
+      "Edit(**/*serviceAccount*)",
+      "Read(**/*credentials.json)",
+      "Edit(**/*credentials.json)",
+      "Read(**/.credentials/**)",
+      "Edit(**/.credentials/**)"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "proj-bootstrap79",
+  "version": "0.0.1",
+  "description": "新しいリポジトリの初手。置き手紙（AGENTS.md）・許可設定・grill-me 用の問いを置いて、次に叩く公式コマンドを教える。",
+  "type": "module",
+  "bin": {
+    "proj-bootstrap79": "bin/proj-bootstrap79.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "templates"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": "github:tomk79/proj-bootstrap79",
+  "license": "MIT"
+}

@@ -1,0 +1,6 @@
+- 構成: `src/main`（Node / IPC / FS）、`src/preload`（`contextBridge` だけ）、`src/renderer`（UI）。renderer から Node を直接触らない。
+- IPC 契約にテストを付ける。renderer と main の境界がいちばん壊れやすい。
+- サプライチェーン: `.npmrc` に `ignore-scripts=true`。必要なネイティブモジュールだけ `npm run setup` で明示的に rebuild する。
+  - 由来: npm 経由の攻撃の大半は `postinstall` で発動する。1,700 パッケージ中、本当に install スクリプトが要るのは数個だった。
+- Lint / Format: `eslint` + `prettier`。テスト: `vitest`（ネイティブモジュールがあるなら Electron 内蔵 Node で走らせる）。E2E: Playwright。
+- Mac App Store に出す予定があるなら、App Sandbox で「通らない」API（`AXUIElement`、osascript 経由の操作）を最初から避ける。「できない」ではなく「審査が通らない」。

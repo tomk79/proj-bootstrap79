@@ -1,0 +1,7 @@
+- 構成: `src-tauri/`（Rust: OS 連携・権限・プロセス管理）／`src/`（TS: UI）。OS 固有 API が Rust から呼べないとき（macOS の Swift 専用 API 等）は `sidecar/` に置き、JSONL で stdin/stdout を繋ぐ。
+  - 由来: SpeechAnalyzer のように Swift 専用の API があり、Rust から直接は呼べなかった。
+- サイドカーの停止は kill ではなく stdin を閉じて伝える。OS 側のリソース（オーディオデバイス等）が kill では解放されないことがある。
+- Lint / Format: `eslint` + `prettier`（TS）、`cargo clippy` + `cargo fmt`（Rust）。
+- テスト: `vitest`（TS）、`cargo test`（Rust）。
+- 権限（macOS の TCC）は `Info.plist` の Usage Description と entitlements に明示する。責任プロセスが別のバイナリにならないよう、権限はアプリ本体に付ける。
+- 配布: 署名は ad-hoc から始めてよいが、`docs/GRILL.md` の「配布経路」で notarization の要否を決めておく。

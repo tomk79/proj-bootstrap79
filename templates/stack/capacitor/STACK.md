@@ -1,0 +1,7 @@
+- 構成: Web UI（Vite）を `ios/` `android/` に載せる。ネイティブ I/O は Capacitor プラグイン経由に限定する。
+- **iOS と Android の両方を、最初のコミットからビルドする。** 片方しか触らないと、もう片方はビルド不能のまま何週間もコミットされる。
+  - 由来: 実際に起きた。CI で両方ビルドさせるのが唯一の防御。
+- Android の `applicationId` は Play に一度公開したら永久に変更できない。`docs/GRILL.md` の識別子欄で先に決める。
+- `google-services.json` など環境依存ファイルの有無でアプリが**起動しなくなる**経路が無いか、無い状態でビルドして確かめる。
+- 実機デバッグ: `adb logcat -b crash -d`（クラッシュはこれ一発）／`adb exec-out screencap -p`（画面で成功判定を取る）。
+- ストア課金の検証は TestFlight / Play 内部テスト経由でしかできない。APK 直挿しでは動かない。
