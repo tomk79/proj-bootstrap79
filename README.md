@@ -17,7 +17,9 @@ npx github:tomk79/proj-bootstrap79
 | `docs/GRILL.md` | **grill-me に必ず埋めさせる問いの空欄**。不可逆の決定はここに書く |
 | `.gitignore` | 最低限 |
 
-最後に「次に叩くコマンド」を表示する（`npm create tauri-app` など）。
+最後に「次にやること」を表示する。順番は **git init → `/grill-me` で `docs/GRILL.md` を埋める → 公式スキャフォルダ**。
+貼るだけで始められる `/grill-me` のプロンプト例と、選んだスタックのスキャフォルダのコマンド（`npm create tauri-app` など）も併せて出る。
+スキャフォルダを先に走らせないのは、何を作らないかが決まる前に置いた雛形が、そのまま仕様になってしまうため。
 
 ## ローカルで動作を試す
 

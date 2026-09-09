@@ -144,15 +144,32 @@ if (skipped.length) {
   stdout.write('既にあるので触らなかったもの（--force で上書き）:\n');
   skipped.forEach((f) => stdout.write(`  = ${f}\n`));
 }
+// スキャフォルダを先に走らせない。何を作らないかが決まる前に雛形を置くと、それが仕様になる。
 const steps = [
   'git init && git add -A && git commit -m "置き手紙"',
-  ...appTypes.map((t) => (multi ? `${APP_TYPES[t].label}: ${scaffoldCmd(t)}` : scaffoldCmd(t))),
-  'docs/GRILL.md の空欄を埋める（grill-me に渡す）',
+  '/grill-me で docs/GRILL.md の空欄を埋める（プロンプトの例は下）',
+  '埋まった方針に合わせて、公式スキャフォルダを走らせる（候補は下）',
   'テストとビルドが空のまま緑になることを確かめてから、最初の機能に入る',
 ];
 stdout.write('\n次にやること:\n' + steps.map((s, i) => `  ${i + 1}. ${s}\n`).join(''));
 
+stdout.write('\n2. で /grill-me に渡すプロンプトの例（そのまま貼って、括弧の中は書き換える）:\n\n');
+stdout.write(grillPrompt().split('\n').map((l) => `  ${l}\n`).join(''));
+
+stdout.write('\n3. のスキャフォルダの候補（選んだスタックの公式コマンド。grill-me の結論次第で変わるので、\n   決まってから叩く。スタックごと変えることになってもここで止められる）:\n');
+appTypes.forEach((t) => stdout.write(`  ${multi ? `${APP_TYPES[t].label}: ` : ''}${scaffoldCmd(t)}\n`));
+
 // ---- helpers ----
+// grill-me に貼るためのプロンプト。答えた内容は埋めておき、人間にしか書けない部分だけ括弧で残す。
+function grillPrompt() {
+  return [
+    `docs/GRILL.md の空欄を埋めたい。`,
+    `${appName} は${vars.APP_TYPE}のアプリで、スタックは ${vars.STACK}${ci === 'none' ? '' : `、CI は ${vars.CI}`}${hosting === 'none' ? '' : `、ホスティングは ${vars.HOSTING}`} のつもり。`,
+    `作りたいのは（一言で書く）。使うのは（最初の1人を具体的に）。`,
+    `「何を作らないか」と「変えられない決定」がまだ決まっていないので、そこを詰めてほしい。`,
+    `決まったことは docs/GRILL.md に書き込み、決まらなかったものは「まだ決めていないこと」に残すこと。`,
+  ].join('\n');
+}
 function readIfExists(p) {
   return existsSync(p) ? readFileSync(p, 'utf8') : null;
 }
